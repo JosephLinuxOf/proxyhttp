@@ -1,11 +1,28 @@
-import socket, threading, thread, select, signal, sys, time
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+HTTP Proxy Server in Python
 
-LISTENING_ADDR = '0.0.0.0'
-LISTENING_PORT = 80
+"""
+import socket
+import threading
+import thread
+import select
+import signal
+import sys
+import time
+import argparse
+import logging
+
 BUFLEN = 4096 * 4
 TIMEOUT = 60
 PASS = ''
-RESPONSE = 'HTTP/1.1 200 <font color="red">By: JoeLinux</>\r\nContent-length: 100\r\n\r\nHTTP/1.1 200 Connection established\r\n\r\n'
+RESPONSE = 'HTTP/1.1 200 <font color="blue">By: Joe Linux</font> \r\nContent-length: 100\r\n\r\n'
+
+def with_color(c, s):
+    return "\x1b[%dm%s\x1b[0m" % (c, s)
+
+logger = logging.getLogger(__name__)
 
 class Server(threading.Thread):
     def __init__(self, host, port):
@@ -78,7 +95,7 @@ class ConnectionHandler(threading.Thread):
             hostPort = self.findHeader(self.client_buffer, 'X-Real-Host')
 
             if hostPort == '':
-                hostPort = '127.0.0.1:443'
+                hostPort = 'localhost:443'
 
             split = self.findHeader(self.client_buffer, 'X-Split')
 
@@ -101,7 +118,7 @@ class ConnectionHandler(threading.Thread):
                 self.client.send('HTTP/1.1 400 NoXRealHost!\r\n\r\n')
 
         #except:
-            #print '- Error happens!'
+            #print '- Error!'
         finally:
             self.close()
 
@@ -179,22 +196,28 @@ class ConnectionHandler(threading.Thread):
             if error:
                 break
 
+def main():
+    parser = argparse.ArgumentParser()
 
-def main(host=LISTENING_ADDR, port=LISTENING_PORT):
+    parser.add_argument('--host', default='127.0.0.1', help='Padrão: 127.0.0.1')
+    parser.add_argument('--port', default='80', help='Padrão: 80')
+    args = parser.parse_args()
     
-    print "\n:-------PythonProxy-------:\n"
-    print "Listening addr: " + host
-    print "Listening port: " + str(port) + "\n"
-    print ":-------------------------:\n"
+    host = args.host
+    port = int(args.port)
+   
+    print with_color (32, "Proxy HTTP funcionando corretamente")
+    print with_color (32, "IP do Servidor:") + host
+    print with_color (32, "Porta:") + str(port)
     
     server = Server(host, port)
     server.start()
-
+                            
     while True:
         try:
             time.sleep(2)
         except KeyboardInterrupt:
-            print 'Stopping...'
+            print with_color (32, "\nSaindo...")
             server.close()
             break
     
